@@ -6,6 +6,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
+	"github.com/mi4r/avito-pvz/internal/metrics"
 	"github.com/mi4r/avito-pvz/internal/storage"
 )
 
@@ -33,6 +34,7 @@ func AddProduct(db storage.Storage) http.HandlerFunc {
 			return
 		}
 
+		metrics.ProductsAdded.Inc()
 		respondJSON(w, http.StatusCreated, product)
 	}
 }

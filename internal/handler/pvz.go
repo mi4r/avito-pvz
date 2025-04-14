@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/mi4r/avito-pvz/internal/metrics"
 	"github.com/mi4r/avito-pvz/internal/storage"
 )
 
@@ -38,6 +39,7 @@ func CreatePVZ(db storage.Storage) http.HandlerFunc {
 			return
 		}
 
+		metrics.PVZCreated.Inc()
 		respondJSON(w, http.StatusCreated, pvz)
 	}
 }

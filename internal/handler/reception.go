@@ -6,6 +6,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
+	"github.com/mi4r/avito-pvz/internal/metrics"
 	"github.com/mi4r/avito-pvz/internal/storage"
 )
 
@@ -32,6 +33,7 @@ func CreateReception(db storage.Storage) http.HandlerFunc {
 			return
 		}
 
+		metrics.ReceptionsCreated.Inc()
 		respondJSON(w, http.StatusCreated, reception)
 	}
 }

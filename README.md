@@ -235,7 +235,8 @@ make cover
 ![coverage](profiles/cover_rate.png)
 Покрытие кода с реализацией grpc метода
 ![coverage](profiles/cover_with_grpc.png)
-
+Покрытие кода с реализацией grpc метода и prometheus
+![coverage](profiles/cover_with_prom_grpc.png)
 
 ## Лицензия
 ```

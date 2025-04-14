@@ -12,9 +12,11 @@ import (
 	_ "github.com/lib/pq"
 	"github.com/mi4r/avito-pvz/internal/config"
 	"github.com/mi4r/avito-pvz/internal/handler"
+	"github.com/mi4r/avito-pvz/internal/metrics"
 	auth "github.com/mi4r/avito-pvz/internal/middleware"
 	"github.com/mi4r/avito-pvz/internal/server/grpc"
 	"github.com/mi4r/avito-pvz/internal/storage"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
@@ -36,13 +38,21 @@ func main() {
 		log.Fatal(err)
 	}
 
-	log.Println(dbURL)
 	store := storage.NewPostgresStorage(db)
 	store.Migrate(dbURL)
 
 	// Create a wait group to wait for all servers to finish
 	var wg sync.WaitGroup
-	wg.Add(2)
+	wg.Add(3)
+
+	// Start Prometheus metrics server
+	go func() {
+		defer wg.Done()
+		http.Handle("/metrics", promhttp.Handler())
+		port := getEnv("PROMETHEUS_PORT", "9000")
+		log.Printf("Starting prometheus server on :%s", port)
+		log.Fatal(http.ListenAndServe(":"+port, nil))
+	}()
 
 	// Start HTTP server
 	go func() {
@@ -67,6 +77,7 @@ func startHTTPServer(store *storage.PostgresStorage) {
 	// Базовые middleware
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
+	r.Use(metrics.PrometheusMiddleware)
 
 	// Публичные маршруты
 	r.Post("/dummyLogin", handler.DummyLogin())
