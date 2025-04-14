@@ -9,6 +9,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	_ "github.com/lib/pq"
+	"github.com/mi4r/avito-pvz/internal/config"
 	"github.com/mi4r/avito-pvz/internal/handler"
 	auth "github.com/mi4r/avito-pvz/internal/middleware"
 	"github.com/mi4r/avito-pvz/internal/storage"
@@ -18,11 +19,11 @@ import (
 )
 
 func main() {
-	// cfg := config.NewConfig()
+	cfg := config.NewConfig()
 
 	// Инициализация подключения к БД
-	dbURL := "postgres://mi4r:1234@localhost:5432/pvz_storage?sslmode=disable"
-	// dbURL := cfg.GetDSN()
+	// dbURL := "postgres://mi4r:1234@localhost:5432/pvz_storage?sslmode=disable"
+	dbURL := cfg.GetDSN()
 	db, err := sql.Open("postgres", dbURL)
 	if err != nil {
 		log.Fatal(err)
