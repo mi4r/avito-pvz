@@ -98,7 +98,6 @@ func TestCreatePVZ(t *testing.T) {
 		w := httptest.NewRecorder()
 		r.ServeHTTP(w, req)
 
-		assert.Equal(t, http.StatusInternalServerError, 500)
 		mockPVZRepo.AssertExpectations(t)
 	})
 }
@@ -238,6 +237,5 @@ func TestGetPVZs(t *testing.T) {
 		w := httptest.NewRecorder()
 		handler(w, req)
 
-		assert.Equal(t, http.StatusInternalServerError, 500)
 	})
 }
