@@ -10,8 +10,8 @@ import (
 )
 
 func AddProduct(
-	productStorage *storage.ProductStorage,
-	receptionStorage *storage.ReceptionStorage,
+	productStorage storage.ProductRepository,
+	receptionStorage storage.ReceptionRepository,
 ) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req struct {
@@ -41,8 +41,8 @@ func AddProduct(
 }
 
 func DeleteLastProduct(
-	productStorage *storage.ProductStorage,
-	receptionStorage *storage.ReceptionStorage,
+	productStorage storage.ProductRepository,
+	receptionStorage storage.ReceptionRepository,
 ) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		pvzID, err := uuid.Parse(chi.URLParam(r, "pvzId"))
