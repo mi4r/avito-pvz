@@ -9,7 +9,7 @@ import (
 	"github.com/mi4r/avito-pvz/internal/storage"
 )
 
-func CreateReception(receptionStorage *storage.ReceptionStorage) http.HandlerFunc {
+func CreateReception(receptionStorage storage.ReceptionRepository) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req struct {
 			PVZID uuid.UUID `json:"pvzId"`
@@ -36,7 +36,7 @@ func CreateReception(receptionStorage *storage.ReceptionStorage) http.HandlerFun
 	}
 }
 
-func CloseLastReception(receptionStorage *storage.ReceptionStorage) http.HandlerFunc {
+func CloseLastReception(receptionStorage storage.ReceptionRepository) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		pvzID, err := uuid.Parse(chi.URLParam(r, "pvzId"))
 		if err != nil {
@@ -54,7 +54,7 @@ func CloseLastReception(receptionStorage *storage.ReceptionStorage) http.Handler
 			respondError(w, http.StatusInternalServerError, "failed to close reception")
 			return
 		}
-
+		reception.Status = "closed"
 		respondJSON(w, http.StatusOK, reception)
 	}
 }

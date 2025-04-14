@@ -20,7 +20,7 @@ func respondError(w http.ResponseWriter, code int, message string) {
 	respondJSON(w, code, map[string]string{"error": message})
 }
 
-func DummyLogin(db *storage.UserStorage) http.HandlerFunc {
+func DummyLogin() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req struct {
 			Role string `json:"role"`
@@ -39,7 +39,7 @@ func DummyLogin(db *storage.UserStorage) http.HandlerFunc {
 	}
 }
 
-func Register(db *storage.UserStorage) http.HandlerFunc {
+func Register(db storage.UserRepository) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req struct {
 			Email    string `json:"email"`
@@ -67,7 +67,7 @@ func Register(db *storage.UserStorage) http.HandlerFunc {
 	}
 }
 
-func Login(db *storage.UserStorage) http.HandlerFunc {
+func Login(db storage.UserRepository) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req struct {
 			Email    string `json:"email"`

@@ -2,7 +2,6 @@ package handler
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 	"strconv"
 	"time"
@@ -10,7 +9,7 @@ import (
 	"github.com/mi4r/avito-pvz/internal/storage"
 )
 
-func CreatePVZ(pvzStorage *storage.PVZStorage) http.HandlerFunc {
+func CreatePVZ(pvzStorage storage.PVZRepository) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req struct {
 			City string `json:"city"`
@@ -43,7 +42,7 @@ func CreatePVZ(pvzStorage *storage.PVZStorage) http.HandlerFunc {
 	}
 }
 
-func GetPVZs(pvzStorage *storage.PVZStorage) http.HandlerFunc {
+func GetPVZs(pvzStorage storage.PVZRepository) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Parse pagination
 		page, _ := strconv.Atoi(r.URL.Query().Get("page"))
@@ -64,7 +63,7 @@ func GetPVZs(pvzStorage *storage.PVZStorage) http.HandlerFunc {
 		if ed := r.URL.Query().Get("endDate"); ed != "" {
 			endDate, _ = time.Parse(time.RFC3339, ed)
 		}
-		log.Println(startDate, endDate)
+
 		// Check user role
 		role := r.Context().Value("role").(string)
 		if role != "moderator" && role != "employee" {
@@ -78,7 +77,6 @@ func GetPVZs(pvzStorage *storage.PVZStorage) http.HandlerFunc {
 			return
 		}
 
-		log.Println(result)
 		// Transform to response format
 		response := make([]storage.PVZWithReceptions, 0, len(result))
 		for _, pvzWithRec := range result {

@@ -24,10 +24,10 @@ func main() {
 	defer pool.Close()
 
 	// Инициализация хранилищ
-	userStorage := storage.NewUserStorage(pool)
-	pvzStorage := storage.NewPVZStorage(pool)
-	receptionStorage := storage.NewReceptionStorage(pool)
-	productStorage := storage.NewProductStorage(pool)
+	userImpl := storage.NewUserStorage(pool)
+	pvzImpl := storage.NewPVZStorage(pool)
+	receptionImpl := storage.NewReceptionStorage(pool)
+	productImpl := storage.NewProductStorage(pool)
 
 	// Создание роутера
 	r := chi.NewRouter()
@@ -37,23 +37,23 @@ func main() {
 	r.Use(middleware.Recoverer)
 
 	// Публичные маршруты
-	r.Post("/dummyLogin", handler.DummyLogin(userStorage))
-	r.Post("/register", handler.Register(userStorage))
-	r.Post("/login", handler.Login(userStorage))
+	r.Post("/dummyLogin", handler.DummyLogin())
+	r.Post("/register", handler.Register(userImpl))
+	r.Post("/login", handler.Login(userImpl))
 
 	// Защищенные маршруты
 	r.Group(func(r chi.Router) {
 		r.Use(auth.Auth)
 
 		// PVZ endpoints
-		r.Post("/pvz", handler.CreatePVZ(pvzStorage))
-		r.Get("/pvz", handler.GetPVZs(pvzStorage))
+		r.Post("/pvz", handler.CreatePVZ(pvzImpl))
+		r.Get("/pvz", handler.GetPVZs(pvzImpl))
 
 		// Reception endpoints
-		r.Post("/receptions", handler.CreateReception(receptionStorage))
-		r.Post("/products", handler.AddProduct(productStorage, receptionStorage))
-		r.Post("/pvz/{pvzId}/close_last_reception", handler.CloseLastReception(receptionStorage))
-		r.Post("/pvz/{pvzId}/delete_last_product", handler.DeleteLastProduct(productStorage, receptionStorage))
+		r.Post("/receptions", handler.CreateReception(receptionImpl))
+		r.Post("/products", handler.AddProduct(productImpl, receptionImpl))
+		r.Post("/pvz/{pvzId}/close_last_reception", handler.CloseLastReception(receptionImpl))
+		r.Post("/pvz/{pvzId}/delete_last_product", handler.DeleteLastProduct(productImpl, receptionImpl))
 	})
 
 	// Запуск сервера
