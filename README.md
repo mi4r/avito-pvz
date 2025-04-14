@@ -231,6 +231,8 @@ make test
 ```bash
 make cover
 ```
+![coverage](profiles/cover_rate.png)
+
 
 ## Лицензия
 ```
