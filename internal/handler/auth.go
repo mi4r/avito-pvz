@@ -29,7 +29,10 @@ func DummyLogin() http.HandlerFunc {
 			respondError(w, http.StatusBadRequest, "invalid request")
 			return
 		}
-
+		if req.Role != "employee" && req.Role != "moderator" {
+			respondError(w, http.StatusBadRequest, "invalid role")
+			return
+		}
 		token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 			"role": req.Role,
 			"exp":  time.Now().Add(72 * time.Hour).Unix(),
