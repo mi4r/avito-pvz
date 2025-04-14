@@ -9,7 +9,7 @@ import (
 	"github.com/mi4r/avito-pvz/internal/storage"
 )
 
-func CreatePVZ(pvzStorage storage.PVZRepository) http.HandlerFunc {
+func CreatePVZ(db storage.Storage) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req struct {
 			City string `json:"city"`
@@ -27,7 +27,7 @@ func CreatePVZ(pvzStorage storage.PVZRepository) http.HandlerFunc {
 			return
 		}
 
-		pvz, err := pvzStorage.CreatePVZ(r.Context(), req.City)
+		pvz, err := db.CreatePVZ(r.Context(), req.City)
 		if err != nil {
 			switch err {
 			case storage.ErrInvalidCity:
@@ -42,7 +42,7 @@ func CreatePVZ(pvzStorage storage.PVZRepository) http.HandlerFunc {
 	}
 }
 
-func GetPVZs(pvzStorage storage.PVZRepository) http.HandlerFunc {
+func GetPVZs(db storage.Storage) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Parse pagination
 		page, _ := strconv.Atoi(r.URL.Query().Get("page"))
@@ -71,7 +71,7 @@ func GetPVZs(pvzStorage storage.PVZRepository) http.HandlerFunc {
 			return
 		}
 
-		result, err := pvzStorage.GetPVZsWithReceptions(r.Context(), startDate, endDate, page, limit)
+		result, err := db.GetPVZsWithReceptions(r.Context(), startDate, endDate, page, limit)
 		if err != nil {
 			respondError(w, http.StatusInternalServerError, "failed to get PVZ data")
 			return

@@ -7,7 +7,6 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type Product struct {
@@ -17,17 +16,9 @@ type Product struct {
 	ReceptionID uuid.UUID `json:"receptionId"`
 }
 
-type ProductStorage struct {
-	db *pgxpool.Pool
-}
-
-func NewProductStorage(db *pgxpool.Pool) *ProductStorage {
-	return &ProductStorage{db: db}
-}
-
-func (s *ProductStorage) AddProduct(ctx context.Context, receptionID uuid.UUID, productType string) (Product, error) {
+func (s *PostgresStorage) AddProduct(ctx context.Context, receptionID uuid.UUID, productType string) (Product, error) {
 	var product Product
-	err := s.db.QueryRow(ctx,
+	err := s.db.QueryRowContext(ctx,
 		`INSERT INTO products (type, reception_id)
 		VALUES ($1, $2)
 		RETURNING id, created_at, type, reception_id`,
@@ -37,9 +28,9 @@ func (s *ProductStorage) AddProduct(ctx context.Context, receptionID uuid.UUID, 
 	return product, err
 }
 
-func (s *ProductStorage) GetLastProduct(ctx context.Context, receptionID uuid.UUID) (Product, error) {
+func (s *PostgresStorage) GetLastProduct(ctx context.Context, receptionID uuid.UUID) (Product, error) {
 	var product Product
-	err := s.db.QueryRow(ctx,
+	err := s.db.QueryRowContext(ctx,
 		`SELECT id, created_at, type, reception_id 
 		FROM products 
 		WHERE reception_id = $1 
@@ -54,8 +45,8 @@ func (s *ProductStorage) GetLastProduct(ctx context.Context, receptionID uuid.UU
 	return product, err
 }
 
-func (s *ProductStorage) DeleteProduct(ctx context.Context, productID uuid.UUID) error {
-	_, err := s.db.Exec(ctx,
+func (s *PostgresStorage) DeleteProduct(ctx context.Context, productID uuid.UUID) error {
+	_, err := s.db.ExecContext(ctx,
 		`DELETE FROM products 
 		WHERE id = $1`,
 		productID,

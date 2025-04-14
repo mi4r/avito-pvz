@@ -67,7 +67,7 @@ func TestDummyLogin(t *testing.T) {
 }
 
 func TestRegister(t *testing.T) {
-	mockRepo := new(mocks.UserRepository)
+	mockRepo := mocks.NewStorage(t)
 	handler := handler.Register(mockRepo)
 
 	t.Run("success registration", func(t *testing.T) {
@@ -138,7 +138,7 @@ func TestRegister(t *testing.T) {
 }
 
 func TestLogin(t *testing.T) {
-	mockRepo := new(mocks.UserRepository)
+	mockRepo := mocks.NewStorage(t)
 	handler := handler.Login(mockRepo)
 
 	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte("correct_password"), bcrypt.DefaultCost)

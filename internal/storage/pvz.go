@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 var (
@@ -30,15 +29,7 @@ type ReceptionWithProducts struct {
 	Products  []Product
 }
 
-type PVZStorage struct {
-	db *pgxpool.Pool
-}
-
-func NewPVZStorage(db *pgxpool.Pool) *PVZStorage {
-	return &PVZStorage{db: db}
-}
-
-func (s *PVZStorage) CreatePVZ(ctx context.Context, city string) (PVZ, error) {
+func (s *PostgresStorage) CreatePVZ(ctx context.Context, city string) (PVZ, error) {
 	validCities := map[string]bool{
 		"Москва":          true,
 		"Санкт-Петербург": true,
@@ -49,7 +40,7 @@ func (s *PVZStorage) CreatePVZ(ctx context.Context, city string) (PVZ, error) {
 	}
 
 	var pvz PVZ
-	err := s.db.QueryRow(ctx,
+	err := s.db.QueryRowContext(ctx,
 		`INSERT INTO pvz (city) 
 		VALUES ($1)
 		RETURNING id, registration_date, city`,
@@ -59,9 +50,9 @@ func (s *PVZStorage) CreatePVZ(ctx context.Context, city string) (PVZ, error) {
 	return pvz, err
 }
 
-func (s *PVZStorage) GetPVZsWithReceptions(ctx context.Context, startDate, endDate time.Time, page, limit int) ([]PVZWithReceptions, error) {
+func (s *PostgresStorage) GetPVZsWithReceptions(ctx context.Context, startDate, endDate time.Time, page, limit int) ([]PVZWithReceptions, error) {
 	// Get PVZs with pagination
-	rows, err := s.db.Query(ctx,
+	rows, err := s.db.QueryContext(ctx,
 		`SELECT id, registration_date, city 
 		FROM pvz 
 		ORDER BY registration_date DESC
@@ -99,9 +90,9 @@ func (s *PVZStorage) GetPVZsWithReceptions(ctx context.Context, startDate, endDa
 	return result, nil
 }
 
-func (s *PVZStorage) getReceptionsForPVZ(ctx context.Context, pvzID uuid.UUID, startDate, endDate time.Time) ([]ReceptionWithProducts, error) {
+func (s *PostgresStorage) getReceptionsForPVZ(ctx context.Context, pvzID uuid.UUID, startDate, endDate time.Time) ([]ReceptionWithProducts, error) {
 	// Get receptions with date filter
-	rows, err := s.db.Query(ctx,
+	rows, err := s.db.QueryContext(ctx,
 		`SELECT r.id, r.created_at, r.pvz_id, r.status 
 		FROM receptions r
 		WHERE r.pvz_id = $1 
@@ -137,8 +128,8 @@ func (s *PVZStorage) getReceptionsForPVZ(ctx context.Context, pvzID uuid.UUID, s
 	return receptions, nil
 }
 
-func (s *PVZStorage) getProductsForReception(ctx context.Context, receptionID uuid.UUID) ([]Product, error) {
-	rows, err := s.db.Query(ctx,
+func (s *PostgresStorage) getProductsForReception(ctx context.Context, receptionID uuid.UUID) ([]Product, error) {
+	rows, err := s.db.QueryContext(ctx,
 		`SELECT id, created_at, type, reception_id 
 		FROM products 
 		WHERE reception_id = $1

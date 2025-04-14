@@ -20,7 +20,7 @@ import (
 )
 
 func TestCreatePVZ(t *testing.T) {
-	mockPVZRepo := new(mocks.PVZRepository)
+	mockPVZRepo := mocks.NewStorage(t)
 	handler := handler.CreatePVZ(mockPVZRepo)
 
 	t.Run("success create pvz", func(t *testing.T) {
@@ -103,7 +103,7 @@ func TestCreatePVZ(t *testing.T) {
 }
 
 func TestGetPVZs(t *testing.T) {
-	mockPVZRepo := new(mocks.PVZRepository)
+	mockPVZRepo := new(mocks.Storage)
 	handler := handler.GetPVZs(mockPVZRepo)
 
 	t.Run("success get pvzs", func(t *testing.T) {

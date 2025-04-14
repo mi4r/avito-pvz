@@ -42,7 +42,7 @@ func DummyLogin() http.HandlerFunc {
 	}
 }
 
-func Register(db storage.UserRepository) http.HandlerFunc {
+func Register(db storage.Storage) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req struct {
 			Email    string `json:"email"`
@@ -70,7 +70,7 @@ func Register(db storage.UserRepository) http.HandlerFunc {
 	}
 }
 
-func Login(db storage.UserRepository) http.HandlerFunc {
+func Login(db storage.Storage) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req struct {
 			Email    string `json:"email"`

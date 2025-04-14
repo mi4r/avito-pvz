@@ -8,7 +8,6 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type Reception struct {
@@ -18,17 +17,9 @@ type Reception struct {
 	Status    string    `json:"status"` // 'in_progress' or 'closed'
 }
 
-type ReceptionStorage struct {
-	db *pgxpool.Pool
-}
-
-func NewReceptionStorage(db *pgxpool.Pool) *ReceptionStorage {
-	return &ReceptionStorage{db: db}
-}
-
-func (s *ReceptionStorage) CreateReception(ctx context.Context, pvzID uuid.UUID) (Reception, error) {
+func (s *PostgresStorage) CreateReception(ctx context.Context, pvzID uuid.UUID) (Reception, error) {
 	var reception Reception
-	err := s.db.QueryRow(ctx,
+	err := s.db.QueryRowContext(ctx,
 		`INSERT INTO receptions (pvz_id)
 		VALUES ($1)
 		RETURNING id, created_at, pvz_id, status`,
@@ -41,9 +32,9 @@ func (s *ReceptionStorage) CreateReception(ctx context.Context, pvzID uuid.UUID)
 	return reception, nil
 }
 
-func (s *ReceptionStorage) GetOpenReception(ctx context.Context, pvzID uuid.UUID) (Reception, error) {
+func (s *PostgresStorage) GetOpenReception(ctx context.Context, pvzID uuid.UUID) (Reception, error) {
 	var reception Reception
-	err := s.db.QueryRow(ctx,
+	err := s.db.QueryRowContext(ctx,
 		`SELECT id, created_at, pvz_id, status 
 		FROM receptions 
 		WHERE pvz_id = $1 AND status = 'in_progress'`,
@@ -56,8 +47,8 @@ func (s *ReceptionStorage) GetOpenReception(ctx context.Context, pvzID uuid.UUID
 	return reception, err
 }
 
-func (s *ReceptionStorage) CloseReception(ctx context.Context, receptionID uuid.UUID) error {
-	_, err := s.db.Exec(ctx,
+func (s *PostgresStorage) CloseReception(ctx context.Context, receptionID uuid.UUID) error {
+	_, err := s.db.ExecContext(ctx,
 		`UPDATE receptions 
 		SET status = 'closed' 
 		WHERE id = $1`,

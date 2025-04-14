@@ -19,7 +19,7 @@ import (
 )
 
 func TestCreateReception(t *testing.T) {
-	mockReceptionRepo := new(mocks.ReceptionRepository)
+	mockReceptionRepo := mocks.NewStorage(t)
 	handler := handler.CreateReception(mockReceptionRepo)
 
 	t.Run("success create reception", func(t *testing.T) {
@@ -107,7 +107,7 @@ func TestCreateReception(t *testing.T) {
 }
 
 func TestCloseLastReception(t *testing.T) {
-	mockReceptionRepo := new(mocks.ReceptionRepository)
+	mockReceptionRepo := new(mocks.Storage)
 	handler := handler.CloseLastReception(mockReceptionRepo)
 
 	t.Run("success close reception", func(t *testing.T) {

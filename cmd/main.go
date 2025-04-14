@@ -1,33 +1,41 @@
 package main
 
 import (
-	"context"
+	"database/sql"
 	"log"
 	"net/http"
 	"os"
-	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
-	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/mi4r/avito-pvz/internal/config"
+	_ "github.com/lib/pq"
 	"github.com/mi4r/avito-pvz/internal/handler"
 	auth "github.com/mi4r/avito-pvz/internal/middleware"
 	"github.com/mi4r/avito-pvz/internal/storage"
+
+	_ "github.com/golang-migrate/migrate/v4/database/postgres"
+	_ "github.com/golang-migrate/migrate/v4/source/file"
 )
 
 func main() {
-	cfg := config.NewConfig()
+	// cfg := config.NewConfig()
 
 	// Инициализация подключения к БД
-	pool := initDB(cfg)
-	defer pool.Close()
+	dbURL := "postgres://mi4r:1234@localhost:5432/pvz_storage?sslmode=disable"
+	// dbURL := cfg.GetDSN()
+	db, err := sql.Open("postgres", dbURL)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer db.Close()
 
-	// Инициализация хранилищ
-	userImpl := storage.NewUserStorage(pool)
-	pvzImpl := storage.NewPVZStorage(pool)
-	receptionImpl := storage.NewReceptionStorage(pool)
-	productImpl := storage.NewProductStorage(pool)
+	if err := db.Ping(); err != nil {
+		log.Fatal(err)
+	}
+
+	log.Println(dbURL)
+	store := storage.NewPostgresStorage(db)
+	store.Migrate(dbURL)
 
 	// Создание роутера
 	r := chi.NewRouter()
@@ -38,57 +46,28 @@ func main() {
 
 	// Публичные маршруты
 	r.Post("/dummyLogin", handler.DummyLogin())
-	r.Post("/register", handler.Register(userImpl))
-	r.Post("/login", handler.Login(userImpl))
+	r.Post("/register", handler.Register(store))
+	r.Post("/login", handler.Login(store))
 
 	// Защищенные маршруты
 	r.Group(func(r chi.Router) {
 		r.Use(auth.Auth)
 
 		// PVZ endpoints
-		r.Post("/pvz", handler.CreatePVZ(pvzImpl))
-		r.Get("/pvz", handler.GetPVZs(pvzImpl))
+		r.Post("/pvz", handler.CreatePVZ(store))
+		r.Get("/pvz", handler.GetPVZs(store))
 
 		// Reception endpoints
-		r.Post("/receptions", handler.CreateReception(receptionImpl))
-		r.Post("/products", handler.AddProduct(productImpl, receptionImpl))
-		r.Post("/pvz/{pvzId}/close_last_reception", handler.CloseLastReception(receptionImpl))
-		r.Post("/pvz/{pvzId}/delete_last_product", handler.DeleteLastProduct(productImpl, receptionImpl))
+		r.Post("/receptions", handler.CreateReception(store))
+		r.Post("/products", handler.AddProduct(store))
+		r.Post("/pvz/{pvzId}/close_last_reception", handler.CloseLastReception(store))
+		r.Post("/pvz/{pvzId}/delete_last_product", handler.DeleteLastProduct(store))
 	})
 
 	// Запуск сервера
 	port := getEnv("PORT", "8080")
 	log.Printf("Starting server on :%s", port)
 	log.Fatal(http.ListenAndServe(":"+port, r))
-}
-
-func initDB(cfg config.Config) *pgxpool.Pool {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	// dbURL := cfg.GetDSN()
-	dbURL := "postgres://mi4r:1234@localhost:5432/pvz_storage?sslmode=disable"
-	// log.Println(dbURL)
-	if dbURL == "" {
-		dbURL = getEnv("DATABASE_URL", "postgres://postgres:postgres@localhost:5432/pvz_storage?sslmode=disable")
-	}
-	// log.Println(dbURL)
-	config, err := pgxpool.ParseConfig(dbURL)
-	if err != nil {
-		log.Fatal("Failed to parse database config:", err)
-	}
-	// log.Println(config.ConnString())
-	pool, err := pgxpool.NewWithConfig(ctx, config)
-	if err != nil {
-		log.Fatal("Failed to create connection pool:", err)
-	}
-
-	// Проверка подключения
-	if err := pool.Ping(ctx); err != nil {
-		log.Fatal("Failed to ping database:", err)
-	}
-
-	log.Println("Successfully connected to database")
-	return pool
 }
 
 func getEnv(key, defaultValue string) string {

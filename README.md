@@ -224,9 +224,12 @@ localhost:8080/pvz/4a8cc5b1-5584-4d2a-a2d5-bc4c4e71120a/close_last_reception
 Статус успешного выполнения или код ошибки с комментарием.
 
 
-## Тестирование
+## Тестирование и покрытие кода
 ```bash
-go test ./... -coverprofile profiles/cover.out && go tool cover -func=profiles/cover.out
+make test
+```
+```bash
+make cover
 ```
 
 ## Лицензия

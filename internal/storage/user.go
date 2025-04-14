@@ -6,7 +6,6 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type User struct {
@@ -16,17 +15,9 @@ type User struct {
 	Role         string    `json:"role"`
 }
 
-type UserStorage struct {
-	db *pgxpool.Pool
-}
-
-func NewUserStorage(db *pgxpool.Pool) *UserStorage {
-	return &UserStorage{db: db}
-}
-
-func (s *UserStorage) CreateUser(ctx context.Context, email, passwordHash, role string) (User, error) {
+func (s *PostgresStorage) CreateUser(ctx context.Context, email, passwordHash, role string) (User, error) {
 	var user User
-	err := s.db.QueryRow(ctx,
+	err := s.db.QueryRowContext(ctx,
 		`INSERT INTO users (email, password_hash, role)
 		VALUES ($1, $2, $3)
 		RETURNING id, email, role`,
@@ -35,9 +26,9 @@ func (s *UserStorage) CreateUser(ctx context.Context, email, passwordHash, role 
 	return user, err
 }
 
-func (s *UserStorage) GetUserByEmail(ctx context.Context, email string) (User, error) {
+func (s *PostgresStorage) GetUserByEmail(ctx context.Context, email string) (User, error) {
 	var user User
-	err := s.db.QueryRow(ctx,
+	err := s.db.QueryRowContext(ctx,
 		`SELECT id, email, password_hash, role 
 		FROM users WHERE email = $1`,
 		email,

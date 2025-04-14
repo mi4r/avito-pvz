@@ -9,10 +9,7 @@ import (
 	"github.com/mi4r/avito-pvz/internal/storage"
 )
 
-func AddProduct(
-	productStorage storage.ProductRepository,
-	receptionStorage storage.ReceptionRepository,
-) http.HandlerFunc {
+func AddProduct(db storage.Storage) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req struct {
 			Type  string    `json:"type"`
@@ -24,13 +21,13 @@ func AddProduct(
 		}
 
 		// Get open reception
-		reception, err := receptionStorage.GetOpenReception(r.Context(), req.PVZID)
+		reception, err := db.GetOpenReception(r.Context(), req.PVZID)
 		if err != nil {
 			respondError(w, http.StatusBadRequest, "no open reception")
 			return
 		}
 
-		product, err := productStorage.AddProduct(r.Context(), reception.ID, req.Type)
+		product, err := db.AddProduct(r.Context(), reception.ID, req.Type)
 		if err != nil {
 			respondError(w, http.StatusInternalServerError, "failed to add product")
 			return
@@ -40,10 +37,7 @@ func AddProduct(
 	}
 }
 
-func DeleteLastProduct(
-	productStorage storage.ProductRepository,
-	receptionStorage storage.ReceptionRepository,
-) http.HandlerFunc {
+func DeleteLastProduct(db storage.Storage) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		pvzID, err := uuid.Parse(chi.URLParam(r, "pvzId"))
 		if err != nil {
@@ -52,19 +46,19 @@ func DeleteLastProduct(
 		}
 
 		// Get open reception
-		reception, err := receptionStorage.GetOpenReception(r.Context(), pvzID)
+		reception, err := db.GetOpenReception(r.Context(), pvzID)
 		if err != nil {
 			respondError(w, http.StatusBadRequest, "no open reception")
 			return
 		}
 
-		product, err := productStorage.GetLastProduct(r.Context(), reception.ID)
+		product, err := db.GetLastProduct(r.Context(), reception.ID)
 		if err != nil {
 			respondError(w, http.StatusNotFound, "no products to delete")
 			return
 		}
 
-		if err := productStorage.DeleteProduct(r.Context(), product.ID); err != nil {
+		if err := db.DeleteProduct(r.Context(), product.ID); err != nil {
 			respondError(w, http.StatusInternalServerError, "failed to delete product")
 			return
 		}
