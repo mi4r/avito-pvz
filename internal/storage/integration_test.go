@@ -14,7 +14,7 @@ import (
 
 func TestCompleteWorkflow(t *testing.T) {
 	// Connect to the test database
-	dbURL := "postgres://mi4r:1234@localhost:5432/pvz_storage?sslmode=disable" // Change with your test DB URL for work
+	dbURL := "postgres://mi4r:1234@localhost:5432/pvz_storage?sslmode=disable" // For Avito testers: change with your test DB URL for work
 	db, err := sql.Open("postgres", dbURL)
 	require.NoError(t, err)
 	defer db.Close()

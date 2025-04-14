@@ -231,7 +231,10 @@ make test
 ```bash
 make cover
 ```
+Покрытие кода без дополнений
 ![coverage](profiles/cover_rate.png)
+Покрытие кода с реализацией grpc метода
+![coverage](profiles/cover_with_grpc.png)
 
 
 ## Лицензия

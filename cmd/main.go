@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"sync"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -12,6 +13,7 @@ import (
 	"github.com/mi4r/avito-pvz/internal/config"
 	"github.com/mi4r/avito-pvz/internal/handler"
 	auth "github.com/mi4r/avito-pvz/internal/middleware"
+	"github.com/mi4r/avito-pvz/internal/server/grpc"
 	"github.com/mi4r/avito-pvz/internal/storage"
 
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
@@ -38,6 +40,27 @@ func main() {
 	store := storage.NewPostgresStorage(db)
 	store.Migrate(dbURL)
 
+	// Create a wait group to wait for all servers to finish
+	var wg sync.WaitGroup
+	wg.Add(2)
+
+	// Start HTTP server
+	go func() {
+		defer wg.Done()
+		startHTTPServer(store)
+	}()
+
+	// Start gRPC server
+	go func() {
+		defer wg.Done()
+		startGRPCServer(store)
+	}()
+
+	// Wait for all servers to finish
+	wg.Wait()
+}
+
+func startHTTPServer(store *storage.PostgresStorage) {
 	// Создание роутера
 	r := chi.NewRouter()
 
@@ -67,8 +90,17 @@ func main() {
 
 	// Запуск сервера
 	port := getEnv("PORT", "8080")
-	log.Printf("Starting server on :%s", port)
+	log.Printf("Starting HTTP server on :%s", port)
 	log.Fatal(http.ListenAndServe(":"+port, r))
+}
+
+func startGRPCServer(store *storage.PostgresStorage) {
+	grpcServer := grpc.NewServer(store)
+	port := getEnv("GRPC_PORT", "3000")
+	log.Printf("Starting gRPC server on :%s", port)
+	if err := grpcServer.Start(port); err != nil {
+		log.Fatalf("Failed to start gRPC server: %v", err)
+	}
 }
 
 func getEnv(key, defaultValue string) string {
